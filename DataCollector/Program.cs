@@ -2,11 +2,14 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
 
     using LeagueSharp;
     using LeagueSharp.Common;
+
+    using Newtonsoft.Json;
 
     class Program
     {
@@ -18,7 +21,15 @@
         /// <value>
         /// The queue.
         /// </value>
-        private static Queue<Data> Queue { get; set; } = new Queue<Data>();
+        private static Queue<Data> Queue { get; } = new Queue<Data>();
+
+        /// <summary>
+        /// Gets the json file path.
+        /// </summary>
+        /// <value>
+        /// The json file path.
+        /// </value>
+        private static string JsonFilePath => Path.Combine(Config.AppDataDirectory, "LAIMP", "Data.json");
 
         #endregion
 
@@ -69,7 +80,11 @@
                 {
                     var data = Queue.Dequeue();
 
-                    // todo process data
+                    // todo cache this list
+                    var dataList = JsonConvert.DeserializeObject<List<Data>>(File.ReadAllText(JsonFilePath));
+                    dataList.Add(data);
+
+                    File.WriteAllText(JsonFilePath, JsonConvert.SerializeObject(dataList));
                 }
             }
         }
