@@ -16,20 +16,20 @@
         #region Properties
 
         /// <summary>
-        /// Gets or sets the queue.
+        ///     Gets the json file path.
         /// </summary>
         /// <value>
-        /// The queue.
-        /// </value>
-        private static Queue<Data> Queue { get; } = new Queue<Data>();
-
-        /// <summary>
-        /// Gets the json file path.
-        /// </summary>
-        /// <value>
-        /// The json file path.
+        ///     The json file path.
         /// </value>
         private static string JsonFilePath => Path.Combine(Config.AppDataDirectory, "LAIMP", "Data.json");
+
+        /// <summary>
+        ///     Gets or sets the queue.
+        /// </summary>
+        /// <value>
+        ///     The queue.
+        /// </value>
+        private static Queue<Data> Queue { get; } = new Queue<Data>();
 
         #endregion
 
@@ -39,7 +39,7 @@
         ///     The main entry point of the application.
         /// </summary>
         /// <param name="args">The arguments.</param>
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             CustomEvents.Game.OnGameLoad += OnGameLoad;
         }
@@ -97,6 +97,18 @@
         #region Public Properties
 
         /// <summary>
+        ///     Gets the allies.
+        /// </summary>
+        /// <value>
+        ///     The allies.
+        /// </value>
+        public IEnumerable<Data> Allies
+            =>
+            ObjectManager.Get<Obj_AI_Hero>()
+                .Where(x => x.Team == this.Team && x.NetworkId != this.NetworkId)
+                .Select(CreateFromHero);
+
+        /// <summary>
         ///     Gets or sets the allies in range.
         /// </summary>
         /// <value>
@@ -145,6 +157,15 @@
         public double DistanceToClosestAlly { get; set; }
 
         /// <summary>
+        ///     Gets the enemies.
+        /// </summary>
+        /// <value>
+        ///     The enemies.
+        /// </value>
+        public IEnumerable<Data> Enemies
+            => ObjectManager.Get<Obj_AI_Hero>().Where(x => x.Team != this.Team).Select(CreateFromHero);
+
+        /// <summary>
         ///     Gets or sets the enemies in range.
         /// </summary>
         /// <value>
@@ -185,6 +206,15 @@
         public double ManaPercent { get; set; }
 
         /// <summary>
+        ///     Gets or sets the network identifier.
+        /// </summary>
+        /// <value>
+        ///     The network identifier.
+        /// </value>
+        [JsonIgnore]
+        public int NetworkId { get; set; }
+
+        /// <summary>
         ///     Gets or sets the position x.
         /// </summary>
         /// <value>
@@ -207,6 +237,15 @@
         ///     The recalling.
         /// </value>
         public double Recalling { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the team.
+        /// </summary>
+        /// <value>
+        ///     The team.
+        /// </value>
+        [JsonIgnore]
+        public GameObjectTeam Team { get; set; }
 
         /// <summary>
         ///     Gets or sets the under turret.
@@ -234,12 +273,12 @@
                            HealthPercent = hero.HealthPercent,
                            DistanceToClosestAlly =
                                ObjectManager.Get<Obj_AI_Hero>()
-                                   .Where(x => x.Team == hero.Team)
+                                   .Where(x => x.Team == hero.Team && x.NetworkId != hero.NetworkId)
                                    .Select(x => x.Distance(hero))
                                    .Min(),
                            AlliesInRange =
                                ObjectManager.Get<Obj_AI_Hero>()
-                                   .Where(x => x.Team == hero.Team)
+                                   .Where(x => x.Team == hero.Team && x.NetworkId != hero.NetworkId)
                                    .Count(x => hero.Distance(x) <= 1000) - 1,
                            EnemiesInRange =
                                ObjectManager.Get<Obj_AI_Hero>()
@@ -248,7 +287,8 @@
                            Level = hero.Level,
                            Experience = hero.Experience, CanMove = hero.CanMove ? 1 : 0,
                            CanAttack = hero.CanAttack ? 1 : 0, Recalling = hero.IsRecalling() ? 1 : 0,
-                           UnderTurret = hero.UnderTurret(true) ? 1 : 0, ManaPercent = hero.ManaPercent
+                           UnderTurret = hero.UnderTurret(true) ? 1 : 0, ManaPercent = hero.ManaPercent,
+                           Team = hero.Team, NetworkId = hero.NetworkId
                        };
         }
 
